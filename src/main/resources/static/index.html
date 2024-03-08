@@ -72,6 +72,7 @@
       </select>
       <input type="text" id="question" name="question" placeholder="Question: Enter Here" maxlength="146">
       <input type="submit" value="Ask">
+      <button id="downloadButton">Download Questions and Answers</button>
     </form>
   </div>
 
@@ -134,6 +135,39 @@
 
       // Clear the input field
       document.getElementById("question").value = "";
+    });
+
+
+    document.getElementById("downloadButton").addEventListener("click", function(event) {
+      event.preventDefault();
+      // Get the questions and answers from the chat container
+      var chatContainer = document.getElementById("chatContainer");
+      var questionsAndAnswers = "";
+
+      // Iterate through each bubble in the chat container
+      var bubbles = chatContainer.getElementsByClassName("bubble");
+      for (var i = 0; i < bubbles.length; i++) {
+        var bubble = bubbles[i];
+        var text = bubble.textContent.trim();
+
+        // Append the question or answer to the string
+        if (bubble.classList.contains("question-bubble")) {
+          questionsAndAnswers += "Question: " + text + "\n";
+        } else if (bubble.classList.contains("answer-bubble")) {
+          questionsAndAnswers += "Answer: " + text + "\n";
+        }
+      }
+
+      // Create a Blob object with the questions and answers
+      var blob = new Blob([questionsAndAnswers], { type: "text/plain" });
+
+      // Create a temporary anchor element to trigger the download
+      var downloadLink = document.createElement("a");
+      downloadLink.href = URL.createObjectURL(blob);
+      downloadLink.download = "questions_and_answers.txt";
+
+      // Programmatically click the anchor element to start the download
+      downloadLink.click();
     });
   </script>
 </body>
