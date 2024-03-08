@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    select, input[type="text"], input[type="submit"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+    }
+
+    input[type="text"] {
+      color: black;
+    }
+
+    input[type="submit"] {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    #response {
+      margin-top: 20px;
+    }
+
+    #chatContainer {
+      margin-bottom: 20px;
+    }
+
+    .bubble {
+      display: inline-block;
+      max-width: 80%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+    }
+
+    .question-bubble {
+      background-color: #007bff;
+      color: #fff;
+      text-align: left;
+    }
+
+    .answer-bubble {
+      background-color: #f0f0f0;
+      color: #000;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+
+    #chatContent {
+      white-space: pre-wrap;
+    }
+
+    #downloadButton {
+      display: block;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Chatbot</h1>
+  <div id="chatContainer">
+    <pre id="chatContent"></pre>
+  </div>
+  <form id="chatForm">
+    <select id="role" name="role">
+      <option value="Student">Student</option>
+      <option value="Teacher">Teacher</option>
+      <option value="Programmer">Programmer</option>
+    </select>
+    <input type="text" id="question" name="question" placeholder="Question: Enter Here" maxlength="146">
+    <input type="submit" value="Ask">
+  </form>
+  <button id="downloadButton">Download Questions and Answers</button>
+</div>
+
+
+<script>
+  document.getElementById("chatForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+    var formData = new FormData(event.target);
+    var role = formData.get("role");
+    var question = formData.get("question");
+    var chatContent = document.getElementById("chatContent");
+
+    // Create the question bubble
+    var questionBubble = document.createElement("div");
+    questionBubble.classList.add("bubble", "question-bubble");
+
+    // Remove the prompt if student is selected
+    questionBubble.textContent = question;
+
+    // Append the question bubble to the chat content
+    chatContent.appendChild(questionBubble);
+
+    var questionToAsk;
+    if (role === "Student") {
+      questionToAsk = "I'm a Student, please respond in simpler terms, "+question;
+    } else  if (role === "Teacher") {
+      questionToAsk = "I'm a Teacher, please respond as appropriate, "+question;
+    }  if (role === "Programmer") {
+      questionToAsk = "I'm a Programmer, please respond technically, "+question;
+    }
+    // Create the request URL
+    var url = "http://localhost:8080/chatCompletion?question=" + encodeURIComponent(questionToAsk);
+
+    // Send the POST request
+    fetch(url, {
+      method: "POST"
+    })
+            .then(function(response) {
+              return response.text();
+            })
+            .then(function(data) {
+              // Extract the answer from the response
+              var answer = data.replace(/Question:.*\n/, "");
+
+              // Create the answer bubble
+              var answerBubble = document.createElement("div");
+              answerBubble.classList.add("bubble", "answer-bubble");
+
+              // Create a pre element for the answer
+              var answerPre = document.createElement("pre");
+              answerPre.textContent = answer;
+
+              // Append the answer pre element to the answer bubble
+              answerBubble.appendChild(answerPre);
+
+              // Append the answer bubble to the chat content
+              chatContent.appendChild(answerBubble);
+
+              // Scroll to the bottom of the chat content
+              chatContent.scrollTop = chatContent.scrollHeight;
+            })
+            .catch(function(error) {
+              // Handle any errors
+              console.error(error);
+            });
+
+    // Clear the input field
+    document.getElementById("question").value = "";
+  });
+
+  document.getElementById("downloadButton").addEventListener("click", function(event) {
+    event.preventDefault();
+    // Get the questions and answers from the chat content
+    var chatContent = document.getElementById("chatContent");
+    var questionsAndAnswers = "";
+
+    // Iterate through each bubble in the chat content
+    var bubbles = chatContent.getElementsByClassName("bubble");
+    for (var i = 0; i < bubbles.length; i++) {
+      var bubble = bubbles[i];
+      var text = bubble.textContent.trim();
+
+      // Append the question or answer to the string
+      if (bubble.classList.contains("question-bubble")) {
+        questionsAndAnswers += "Question: " + text + "\n";
+      } else if (bubble.classList.contains("answer-bubble")) {
+        questionsAndAnswers += "Answer: " + text + "\n\n";
+      }
+    }
+
+    // Create a Blob object with the questions and answers
+    var blob = new Blob([questionsAndAnswers], { type: "text/plain" });
+
+    // Create a temporary anchor element to trigger the download
+    var downloadLink = document.createElement("a");
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.download = "questions_and_answers.txt";
+
+    // Programmatically click the anchor element to start the download
+    downloadLink.click();
+  });
+</script>
+</body>
+</html>
