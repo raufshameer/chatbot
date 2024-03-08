@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot</title>
+  <style>
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    select, input[type="text"], input[type="submit"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+    }
+    input[type="text"] {
+      color: black;
+    }
+    input[type="submit"] {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    #response {
+      margin-top: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    #chatContainer {
+      margin-bottom: 20px;
+    }
+
+    .bubble {
+      display: inline-block;
+      max-width: 80%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+    }
+
+    .question-bubble {
+      background-color: #007bff;
+      color: #fff;
+      text-align: left;
+    }
+
+    .answer-bubble {
+      background-color: #f0f0f0;
+      color: #000;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Chatbot</h1>
+    <div id="chatContainer"></div>
+    <form id="chatForm">
+      <select id="role" name="role">
+        <option value="Student">Student</option>
+        <option value="Teacher">Teacher</option>
+        <option value="Programmer">Programmer</option>
+      </select>
+      <input type="text" id="question" name="question" placeholder="Question: Enter Here" maxlength="146">
+      <input type="submit" value="Ask">
+    </form>
+  </div>
+
+
+  <script>
+    document.getElementById("chatForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      var formData = new FormData(event.target);
+      var role = formData.get("role");
+      var question = formData.get("question");
+      var chatContainer = document.getElementById("chatContainer");
+
+      // Create the question bubble
+      var questionBubble = document.createElement("div");
+      questionBubble.classList.add("bubble", "question-bubble");
+
+      // Remove the prompt if student is selected
+      questionBubble.textContent = question;
+
+      // Append the question bubble to the chat container
+      chatContainer.appendChild(questionBubble);
+
+      var questionToAsk;
+      if (role === "Student") {
+        questionToAsk = "I'm a Student, please respond in simpler terms, "+question;
+      } else  if (role === "Teacher") {
+        questionToAsk = "I'm a Teacher, please respond as appropriate, "+question;
+      }  if (role === "Programmer") {
+        questionToAsk = "I'm a Programmer, please respond technically, "+question;
+      }
+      // Create the request URL
+      var url = "http://localhost:8080/chatCompletion?question=" + encodeURIComponent(questionToAsk);
+
+      // Send the POST request
+      fetch(url, {
+        method: "POST"
+      })
+              .then(function(response) {
+                return response.text();
+              })
+              .then(function(data) {
+                // Extract the answer from the response
+                var answer = data.replace(/Question:.*\n/, "");
+
+                // Create the answer bubble
+                var answerBubble = document.createElement("div");
+                answerBubble.classList.add("bubble", "answer-bubble");
+                answerBubble.textContent =  answer;
+
+                // Append the answer bubble to the chat container
+                chatContainer.appendChild(answerBubble);
+
+                // Scroll to the bottom of the chat container
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+              })
+              .catch(function(error) {
+                // Handle any errors
+                console.error(error);
+              });
+
+      // Clear the input field
+      document.getElementById("question").value = "";
+    });
+  </script>
+</body>
+</html>
