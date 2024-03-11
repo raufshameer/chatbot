@@ -119,7 +119,7 @@
       questionToAsk = "I'm a Programmer, please respond technically, "+question;
     }
     // Create the request URL
-    var url = "http://localhost:8080/chatCompletion?question=" + encodeURIComponent(questionToAsk);
+    var url = window.location.origin + "/chatCompletion?question=" + encodeURIComponent(questionToAsk);
 
     // Send the POST request
     fetch(url, {
